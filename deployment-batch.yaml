@@ -1,0 +1,32 @@
+# Batch work that runs only on nodes reserved for it.
+# Prepare nodes:  kubectl taint nodes NODE workload=batch:NoSchedule
+#                 kubectl label nodes NODE workload=batch
+# The taint keeps everyone else off; the toleration lets this in; the nodeSelector makes
+# it go there. A toleration alone does not attract a pod, it only permits it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: report-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: report-worker}
+  template:
+    metadata:
+      labels: {app: report-worker}
+    spec:
+      priorityClassName: batch-low
+      nodeSelector:
+        workload: batch
+      tolerations:
+        - key: workload
+          operator: Equal
+          value: batch
+          effect: NoSchedule
+      containers:
+        - name: worker
+          image: busybox:1.37
+          command: ["sh", "-c", "while true; do sleep 3600; done"]
+          resources:
+            requests: {cpu: 200m, memory: 128Mi}
+            limits: {memory: 256Mi}

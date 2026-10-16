@@ -1,0 +1,17 @@
+# PriorityClass is cluster-scoped. Higher value wins when the cluster is full and may preempt lower.
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: app-critical
+value: 100000
+globalDefault: false
+description: "User-facing services. May preempt batch work."
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: batch-low
+value: 1000
+preemptionPolicy: Never          # waits for room instead of evicting others
+globalDefault: false
+description: "Batch and reports. Never preempts, can be preempted."
